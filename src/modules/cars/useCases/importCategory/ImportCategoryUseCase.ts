@@ -3,10 +3,7 @@ import fs from "fs";
 
 import { ICategoriesRepository } from "../../repositories/implementations/ICategoriesRepository";
 
-interface IImportCategory {
-  name: string;
-  description: string;
-}
+type IImportCategory = [name: string, description: string];
 
 class ImportCategoryUseCase {
   constructor(private categoriesRepository: ICategoriesRepository) {}
@@ -25,14 +22,10 @@ class ImportCategoryUseCase {
         .on("data", async (line: IImportCategory): Promise<void> => {
           const [name, description] = line;
 
-          console.log(name, description);
-
-          categories.push({
-            name,
-            description,
-          });
+          categories.push([name, description]);
         })
         .on("end", () => {
+          fs.promises.unlink(file.path);
           resolve(categories);
         })
         .on("error", (err) => {
@@ -45,7 +38,7 @@ class ImportCategoryUseCase {
     const categories = await this.loadCategories(file);
 
     categories.map((category) => {
-      const { name, description } = category;
+      const [name, description] = category;
 
       const existCategory = this.categoriesRepository.findByName(name);
 
